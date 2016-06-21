@@ -1,0 +1,8 @@
+FINAL_TARGET = 'dist/bin/browser/extensions/html-runner@mozilla.org'
+
+FINAL_TARGET_FILES += [
+  'bootstrap.js',
+  'BrowserUIProtocolHandler.jsm',
+  'chrome.manifest',
+  'install.rdf'
+]
