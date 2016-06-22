@@ -8,7 +8,6 @@ if (location.href.startsWith("browserui")) {
 let browsers = [];
 
 chrome.storage.local.get("browsers", storage => {
-  dump("get >> "+JSON.stringify(storage)+"\n");
   browsers = storage.browsers;
   if (!Array.isArray(browsers)) {
     browsers = [];
@@ -18,7 +17,6 @@ chrome.storage.local.get("browsers", storage => {
 });
 
 function install(uri) {
-
   if (!browsers.includes(uri) && uri != "browserui://") {
     browsers.push(uri);
     chrome.storage.local.set({ browsers }, function () {
@@ -31,7 +29,7 @@ function install(uri) {
   }
 }
 
-let installBtn = document.querySelector("button.install");
+let installBtn = document.querySelector(".install");
 let url = document.querySelector(".new .url");
 let versions = document.querySelector(".versions");
 let newBox = document.querySelector(".new");

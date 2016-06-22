@@ -2,34 +2,67 @@ body {
   font: message-box;
   background-color: #F9F9F9;
   text-align: center;
+  font-size: 14px;
+  color: #424f59;
+}
+
+h1 {
+  font-size: 26px;
+  font-weight: 400;
 }
 
 .new {
   border: 1px solid #a8b8d1;
-  border-bottom-width: 0;
   border-radius: 8px;
   background: linear-gradient(#fff 0,#ecf1f7 100%);
-  box-shadow: inset 0 -3px 0 rgba(58,78,103,.05),0 3px 0 rgba(175,195,220,.3);
-  margin: 20px;
-  padding-bottom: 20px;
+  box-shadow: inset 0 -2px 0 rgba(58,78,103,.05),0 2px 0 rgba(175,195,220,.3);
+  display: flex;
+  flex-direction: horizontal;
+  width: 700px;
+  height: 80px;
+  margin: 30px auto;
+}
+
+.new .left {
+  flex-grow: 1;
+}
+
+.install {
+  cursor: pointer;
+  background: url("arrow.svg#search-arrow-go") center center no-repeat, linear-gradient(hsla(0,0%,100%,.8), hsla(0,0%,100%,.1)) padding-box;
+  border: 1px solid hsla(210,54%,20%,.15);
+  border-radius: 0 2px 2px 0;
+  box-shadow: 0 0 2px hsla(0,0%,100%,.5) inset,
+              0 1px 0 hsla(0,0%,100%,.2);
+  width: 200px;
+  line-height: 120px;
+}
+.install:hover {
+  background-image: url("arrow.svg#search-arrow-go-inverted"), linear-gradient(#4cb1ff, #1793e5);
+  box-shadow: 0 1px 0 hsla(0,0%,100%,.2) inset,
+              0 0 0 1px hsla(0,0%,100%,.1) inset,
+              0 1px 0 hsla(210,54%,20%,.03),
+              0 0 4px hsla(206,100%,20%,.2);
+  color: white;
+}
+
+ul {
+  padding: 0;
 }
 
 li {
   list-style: none;
   display: flex;
   flex-direction: horizontal;
-  margin: 10px;
+  width: 700px;
+  margin: 30px auto;
+  border: 1px solid #a8b8d1;
+  border-radius: 8px;
+  background: linear-gradient(#fff 0,#ecf1f7 100%);
+  box-shadow: inset 0 -2px 0 rgba(58,78,103,.05),0 2px 0 rgba(175,195,220,.3);
 }
 
 /* Hack to align li content to center */
-li:before {
-  content: "";
-  flex-grow: 1;
-}
-li:after {
-  content: "";
-  flex-grow: 1;
-}
 
 .go {
   cursor: pointer;
@@ -38,7 +71,7 @@ li:after {
   border-radius: 0 2px 2px 0;
   box-shadow: 0 0 2px hsla(0,0%,100%,.5) inset,
               0 1px 0 hsla(0,0%,100%,.2);
-  width: 25px; 
+  width: 75px;
   height: 25px; 
 }
 .go:hover {
@@ -52,6 +85,7 @@ li:after {
 li .name {
   margin: 0 10px;
   line-height: 25px;
+  flex-grow: 1;
 }
 
 li .remove {

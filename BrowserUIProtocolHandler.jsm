@@ -258,6 +258,17 @@ var BrowserUIHandlerFactory = {
       registrar.unregisterFactory(BrowserUIHandlerFactory.classID, BrowserUIHandlerFactory);
     }
     windows = [];
+  },
+
+  resetUI: function () {
+    setURIAsDefaultUI("browserui://");
+  },
+
+  reloadUI: function () {
+    let window = Services.wm.getMostRecentWindow(null);
+    if (window) {
+      window.location.reload(true);
+    }
   }
 };
 

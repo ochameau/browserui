@@ -11,4 +11,5 @@ FINAL_TARGET_FILES += [
   'install-page.js',
   'install.rdf',
   'manifest.json',
+  'MultiWindowKeyListener.jsm',
 ]
