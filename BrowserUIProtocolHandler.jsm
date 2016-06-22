@@ -15,13 +15,13 @@ const registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-var EXPORTED_SYMBOLS = ["BrowserUIHandler"];
+Cu.importGlobalProperties(["URL"]);
 
-// Listen for message coming from the browserui:// protocol handler
-// which may come from the content or the parent. But only listen from the parent.
-if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_DEFAULT) {
-  Services.ppmm.addMessageListener("BrowserUI::Set", setURIAsDefaultUI);
-}
+var EXPORTED_SYMBOLS = ["BrowserUIHandlerFactory"];
+
+// URL string to redirect to. Passed to BrowserUIHandlerFactory.register()
+let installPageURL;
+let addonId;
 
 // Watch for new browser UI toplevel document load
 [
@@ -37,8 +37,9 @@ if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_DEFAULT) {
 });
 
 
-function setURIAsDefaultUI({ data }) {
-  let uri = Services.io.newURI(data.uri, null, null);
+function setURIAsDefaultUI(browseruiURI) {
+  let httpURI = browseruiURI.replace(/^browserui/, "http");
+  let uri = Services.io.newURI(httpURI, null, null);
 
   // Reset permissions and prefs if we are switching from a custom UI
   if (Services.prefs.prefHasUserValue("browser.chromeURL")) {
@@ -168,31 +169,42 @@ function BrowserUIHandler() {
 BrowserUIHandler.prototype = {
   scheme: "browserui",
   defaultPort: -1,
-  protocolFlags: Ci.nsIProtocolHandler.URI_NORELATIVE |
-                 Ci.nsIProtocolHandler.URI_NOAUTH |
-                 Ci.nsIProtocolHandler.URI_LOADABLE_BY_ANYONE |
-                 Ci.nsIProtocolHandler.URI_DOES_NOT_RETURN_DATA,
+  protocolFlags: Ci.nsIProtocolHandler.URI_STD |
+                 Ci.nsIProtocolHandler.URI_FETCHABLE_BY_ANYONE |
+                 Ci.nsIProtocolHandler.URI_LOADABLE_BY_ANYONE,
   allowPort: () => false,
 
+  mapping: new Map(),
+
   newURI: function Proto_newURI(aSpec, aOriginCharset, aBaseURI) {
-    if (!aSpec.startsWith("browserui://")) {
-      return aBaseURI.resolve(aSpec);
+    // Relative urls:
+    if (!aSpec.startsWith("browserui:")) {
+      let redirect = Services.io.newURI(aBaseURI.spec + aSpec, null, null);
+      this.mapping.set(redirect.spec, aSpec);
+      return redirect;
     }
-    let uri = Cc["@mozilla.org/network/simple-uri;1"].createInstance(Ci.nsIURI);
+    // Absolute urls:
+    var uri = Cc["@mozilla.org/network/standard-url;1"].createInstance(Ci.nsIURI);
     uri.spec = aSpec;
     return uri;
   },
 
   newChannel2: function Proto_newChannel(aURI, aLoadInfo) {
-    aURI.scheme = "http";
-    Services.cpmm.sendAsyncMessage("BrowserUI::Set", { uri: aURI.spec })
+    let url;
+    if (this.mapping.has(aURI.spec)) {
+      // For relative urls, resolve against the install page URL
+      url = Services.io.newURI(this.mapping.get(aURI.spec), null, Services.io.newURI(installPageURL, null, null)).spec;
+    } else {
+      // Otherwise, map any absolute URL to the install page directly.
+      url = installPageURL;
+    }
 
-    let redirect = Services.io.newURI("data:text/html,loading new browser ui", null, null);
+    let redirect = Services.io.newURI(url, null, null);
     let ch = Services.io.newChannelFromURIWithLoadInfo(redirect, aLoadInfo);
-    ch.originalURI = aURI;
-    return ch;
+    // Required to get access to WebExtension chrome.* APIs
+    ch.owner = Services.scriptSecurityManager.createCodebasePrincipal(redirect, {addonId});
 
-    //throw Components.results.NS_ERROR_ILLEGAL_VALUE;
+    return ch;
   },
 
   newChannel: function Proto_newChannel(aURI) {
@@ -223,12 +235,21 @@ var BrowserUIHandlerFactory = {
   },
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIFactory]),
 
-  register: function() {
+  register: function(pageURL, id) {
+    installPageURL = pageURL;
+    addonId = id;
     if (!registrar.isCIDRegistered(BrowserUIHandlerFactory.classID)) {
       registrar.registerFactory(BrowserUIHandlerFactory.classID,
                                 BrowserUIHandlerFactory.classDescription,
                                 BrowserUIHandlerFactory.contractID,
                                 BrowserUIHandlerFactory);
+      // Start listening for broadcast channel messages sent from the addon
+      let onMessage = function({ data }) {
+        setURIAsDefaultUI(data.uri);
+      }
+      // Listen for message from page loading in browser.xul without mozbrowser iframes
+      let channel = BroadcastChannelFor(installPageURL, "confirm", {addonId});
+      channel.addEventListener("message", onMessage);
     }
   },
 
@@ -236,5 +257,21 @@ var BrowserUIHandlerFactory = {
     if (registrar.isCIDRegistered(BrowserUIHandlerFactory.classID)) {
       registrar.unregisterFactory(BrowserUIHandlerFactory.classID, BrowserUIHandlerFactory);
     }
+    windows = [];
   }
 };
+
+let windows = [];
+function BroadcastChannelFor(uri, name, originAttributes) {
+  let baseURI = Services.io.newURI(uri, null, null);
+  let principal = Services.scriptSecurityManager.createCodebasePrincipal(baseURI, originAttributes);
+
+  let chromeWebNav = Services.appShell.createWindowlessBrowser(true);
+  // XXX: Keep a ref to the window otherwise it is garbaged and BroadcastChannel stops working.
+  windows.push(chromeWebNav);
+  let interfaceRequestor = chromeWebNav.QueryInterface(Ci.nsIInterfaceRequestor);
+  let docShell = interfaceRequestor.getInterface(Ci.nsIDocShell);
+  docShell.createAboutBlankContentViewer(principal);
+  let window = docShell.contentViewer.DOMDocument.defaultView;
+  return new window.BroadcastChannel(name);
+}

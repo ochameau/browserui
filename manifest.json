@@ -1,0 +1,16 @@
+{
+  "description": "Html Runner",
+  "manifest_version": 2,
+  "name": "HtmlRunner",
+  "version": "1.0",
+
+  "applications": {
+    "gecko": {
+      "id": "html-runner@mozilla.org"
+    }
+  },
+
+  "permissions": [
+    "storage"
+  ]
+}

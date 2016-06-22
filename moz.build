@@ -1,8 +1,14 @@
 FINAL_TARGET = 'dist/bin/browser/extensions/html-runner@mozilla.org'
 
 FINAL_TARGET_FILES += [
+  'arrow.svg',
   'bootstrap.js',
   'BrowserUIProtocolHandler.jsm',
   'chrome.manifest',
-  'install.rdf'
+  'controls.svg',
+  'install-page.css',
+  'install-page.html',
+  'install-page.js',
+  'install.rdf',
+  'manifest.json',
 ]
