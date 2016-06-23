@@ -193,9 +193,13 @@ BrowserUIHandler.prototype = {
     }
 
     let redirect = Services.io.newURI(url, null, null);
-    let ch = Services.io.newChannelFromURIWithLoadInfo(redirect, aLoadInfo);
     // Required to get access to WebExtension chrome.* APIs
-    ch.owner = Services.scriptSecurityManager.createCodebasePrincipal(redirect, {addonId});
+    let originAttributes = {
+      addonId,
+      inIsolatedMozBrowser: aLoadInfo.originAttributes.inIsolatedMozBrowser
+    }
+    let ch = Services.io.newChannelFromURIWithLoadInfo(redirect, aLoadInfo);
+    ch.owner = Services.scriptSecurityManager.createCodebasePrincipal(redirect, originAttributes);
 
     return ch;
   },
@@ -242,6 +246,9 @@ var BrowserUIHandlerFactory = {
       }
       // Listen for message from page loading in browser.xul without mozbrowser iframes
       let channel = BroadcastChannelFor(installPageURL, "confirm", {addonId});
+      channel.addEventListener("message", onMessage);
+      // and also from mozbrowser iframes used in html browsers
+      channel = BroadcastChannelFor(installPageURL, "confirm", {addonId, inIsolatedMozBrowser: true});
       channel.addEventListener("message", onMessage);
     }
   },

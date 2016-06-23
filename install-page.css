@@ -6,6 +6,10 @@ body {
   color: #424f59;
 }
 
+[hidden="true"] {
+  display: none !important;
+}
+
 h1 {
   font-size: 26px;
   font-weight: 400;

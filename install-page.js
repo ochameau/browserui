@@ -35,10 +35,10 @@ let versions = document.querySelector(".versions");
 let newBox = document.querySelector(".new");
 let resetBtn = document.querySelector(".reset");
 
-if (browserui == "browserui://") {
-  newBox.hidden = true;
+if (browserui == "browserui://" || browserui == "browserui:///") {
+  newBox.setAttribute("hidden", "true");
 } else {
-  newBox.hidden = false;
+  newBox.removeAttribute("hidden");
   url.textContent = browserui;
 }
 
