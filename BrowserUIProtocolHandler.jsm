@@ -104,13 +104,6 @@ const Preferences = (function() {
     //
     { name: "dom.webcomponents.enabled", value: true },
     { name: "dom.mozBrowserFramesEnabled", value: true },
-    { name: "extensions.webextensions.addon_implementation", value: true },
-
-    //
-    // Extensions
-    //
-    { name: "extensions.autoDisableScopes", value: 0 },
-    { name: "xpinstall.signatures.required", value: false }
   ];
 
   function add(preference) {
