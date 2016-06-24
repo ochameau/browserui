@@ -252,6 +252,13 @@ var BrowserUIHandlerFactory = {
                                 BrowserUIHandlerFactory.classDescription,
                                 BrowserUIHandlerFactory.contractID,
                                 BrowserUIHandlerFactory);
+      // Only register the protocol from the parent process!
+      // There is no need to listen for install page event from the child process
+      // as broadcastchannel works across processes.
+      if (Services.appinfo.processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT) {
+        return;
+      }
+
       // Start listening for broadcast channel messages sent from the addon
       let onMessage = function({ data }) {
         setURIAsDefaultUI(data.uri);
@@ -269,6 +276,7 @@ var BrowserUIHandlerFactory = {
     if (registrar.isCIDRegistered(BrowserUIHandlerFactory.classID)) {
       registrar.unregisterFactory(BrowserUIHandlerFactory.classID, BrowserUIHandlerFactory);
     }
+    // Releasing the windows should collect them and the broadcastchannels with them.
     windows = [];
   },
 
