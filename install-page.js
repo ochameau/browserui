@@ -39,7 +39,7 @@ if (browserui == "browserui://" || browserui == "browserui:///") {
   newBox.setAttribute("hidden", "true");
 } else {
   newBox.removeAttribute("hidden");
-  url.textContent = browserui;
+  url.textContent = browserui.replace(/^browserui/, "http");
 }
 
 installBtn.addEventListener("click", function () {

@@ -62,9 +62,9 @@ function setURIAsDefaultUI(browseruiURI) {
     Permissions.unset(currentUri);
     Preferences.unset();
   }
-  // When passing browserui://, path is '/', reset back to browser.xul
+  // When passing browserui://, hort is null, reset back to browser.xul
   // and do not set any particular pref or permission.
-  if (uri.path !== "/") {
+  if (uri.host) {
     Preferences.set(uri);
     Permissions.set(uri);
   } else {
