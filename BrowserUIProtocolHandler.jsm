@@ -27,11 +27,25 @@ let addonId;
 [
   'chrome-document-loaded',
   'content-document-loaded',
+  'document-element-inserted'
 ].forEach(function(name) {
   Services.obs.addObserver(function(subject, topic, data) {
+    let chromeURL = Services.prefs.getCharPref('browser.chromeURL');
     if (subject.defaultView instanceof Ci.nsIDOMChromeWindow &&
-        subject.location == Services.prefs.getCharPref('browser.chromeURL')) {
-      Services.obs.notifyObservers(null, 'new-chrome-loaded', null);
+        subject.location.href.startsWith(chromeURL)) {
+      if (topic === "document-element-inserted") {
+        // Add a fake gBrowser object, very minimal and non-working,
+        // just to have basic WebExtension feature working:
+        // loading install-page.html in an HTML iframe...
+        // Otherwise we get random exceptions which prevent exposing chrome.*
+        // APIs to it
+        subject.defaultView.gBrowser = {
+          addTabsProgressListener() {},
+          getTabForBrowser() {}
+        };
+      } else {
+        Services.obs.notifyObservers(null, 'new-chrome-loaded', null);
+      }
     }
   }, name, false);
 });
@@ -194,10 +208,8 @@ BrowserUIHandler.prototype = {
 
     let redirect = Services.io.newURI(url, null, null);
     // Required to get access to WebExtension chrome.* APIs
-    let originAttributes = {
-      addonId,
-      inIsolatedMozBrowser: aLoadInfo.originAttributes.inIsolatedMozBrowser
-    }
+    let originAttributes = aLoadInfo.originAttributes;
+    originAttributes.addonId = addonId;
     let ch = Services.io.newChannelFromURIWithLoadInfo(redirect, aLoadInfo);
     ch.owner = Services.scriptSecurityManager.createCodebasePrincipal(redirect, originAttributes);
 
