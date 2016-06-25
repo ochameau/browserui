@@ -161,7 +161,12 @@ function restart(uri) {
   //  .quit(Ci.nsIAppStartup.eForceQuit | Ci.nsIAppStartup.eRestart);
   let window = Services.wm.getMostRecentWindow(null);
   if (window) {
-    window.document.location = uri.spec;
+    // Close and reopen instead of just updating the location
+    // As window properties like "tabsintitle" or transparent windows
+    // are not updated when just changing the location. It is only computed once
+    // on window opening.
+    Services.ww.openWindow(null, uri.spec, "_blank", "chrome,dialog=no,all", null);
+    window.close();
   }
   Services.prefs.savePrefFile(null); 
 }
