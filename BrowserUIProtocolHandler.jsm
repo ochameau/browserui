@@ -31,18 +31,26 @@ let addonId;
 ].forEach(function(name) {
   Services.obs.addObserver(function(subject, topic, data) {
     let chromeURL = Services.prefs.getCharPref('browser.chromeURL');
-    if (subject.defaultView instanceof Ci.nsIDOMChromeWindow &&
+    let window = subject.defaultView;
+    if (window instanceof Ci.nsIDOMChromeWindow &&
         subject.location.href.startsWith(chromeURL)) {
       if (topic === "document-element-inserted") {
-        // Add a fake gBrowser object, very minimal and non-working,
-        // just to have basic WebExtension feature working:
-        // loading install-page.html in an HTML iframe...
-        // Otherwise we get random exceptions which prevent exposing chrome.*
-        // APIs to it
-        subject.defaultView.gBrowser = {
-          addTabsProgressListener() {},
-          getTabForBrowser() {}
-        };
+        if (chromeURL != "chrome://browser/content/browser.xul") {
+          // Add a fake gBrowser object, very minimal and non-working,
+          // just to have basic WebExtension feature working:
+          // loading install-page.html in an HTML iframe...
+          // Otherwise we get random exceptions which prevent exposing chrome.*
+          // APIs to it
+          window.gBrowser = {
+            addTabsProgressListener() {},
+            getTabForBrowser() {}
+          };
+          // Automatically resize the window, otherwise it defaults to 1x1 on Linux and Widthx0 on Windows
+          if (window.innerWidth < 10 || window.innerHeight < 10) {
+            subject.documentElement.setAttribute("width", window.screen.availWidth * 0.9);
+            subject.documentElement.setAttribute("height", window.screen.availHeight * 0.9);
+          }
+        }
       } else {
         Services.obs.notifyObservers(null, 'new-chrome-loaded', null);
       }
