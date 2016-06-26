@@ -173,7 +173,12 @@ function restart(uri) {
     // As window properties like "tabsintitle" or transparent windows
     // are not updated when just changing the location. It is only computed once
     // on window opening.
-    Services.ww.openWindow(null, uri.spec, "_blank", "chrome,dialog=no,all", null);
+    // browser.xul requires args with the default tab to open...
+    let args = Cc["@mozilla.org/supports-array;1"].createInstance(Ci.nsISupportsArray);
+    let url = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
+    url.data = "about:blank";
+    args.AppendElement(url);
+    Services.ww.openWindow(null, uri.spec, "_blank", "chrome,dialog=no,all", args);
     window.close();
   }
   Services.prefs.savePrefFile(null); 
