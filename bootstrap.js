@@ -19,14 +19,14 @@ function startup(data) {
 
   // Register browserui:// on every process and the new one to come
   Services.ppmm.loadProcessScript("data:,(" + function (pageURL, addonId) {
-    const { BrowserUIHandlerFactory } = Components.utils.import("resource://html-runner/BrowserUIProtocolHandler.jsm", {});
+    const { BrowserUIHandlerFactory } = Components.utils.import("resource://browserui/BrowserUIProtocolHandler.jsm", {});
     BrowserUIHandlerFactory.register(pageURL, addonId);
   } + ")(\"" + installPageURL + "\", \"" + addonId + "\")", true);
 
   // Register two key shortcuts to reload the browser ui and reset back to browser.xul
   // These shortcuts work from all windows
-  const { MultiWindowKeyListener } = Components.utils.import("resource://html-runner/MultiWindowKeyListener.jsm", {});
-  const { BrowserUIHandlerFactory } = Components.utils.import("resource://html-runner/BrowserUIProtocolHandler.jsm", {});
+  const { MultiWindowKeyListener } = Components.utils.import("resource://browserui/MultiWindowKeyListener.jsm", {});
+  const { BrowserUIHandlerFactory } = Components.utils.import("resource://browserui/BrowserUIProtocolHandler.jsm", {});
   listenerReload = new MultiWindowKeyListener({
     keyCode: Ci.nsIDOMKeyEvent.DOM_VK_R, altKey: true,
     callback: () => BrowserUIHandlerFactory.reloadUI()
@@ -46,7 +46,7 @@ function install() {
 function shutdown() {
   // Unregister browserui:// on all active processes.
   Services.ppmm.loadProcessScript("data:,new " + function () {
-    const { BrowserUIHandlerFactory } = Components.utils.import("resource://html-runner/BrowserUIProtocolHandler.jsm", {});
+    const { BrowserUIHandlerFactory } = Components.utils.import("resource://browserui/BrowserUIProtocolHandler.jsm", {});
     BrowserUIHandlerFactory.unregister();
   }, false);
 

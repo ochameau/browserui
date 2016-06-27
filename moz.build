@@ -1,4 +1,4 @@
-FINAL_TARGET = 'dist/bin/browser/extensions/html-runner@mozilla.org'
+FINAL_TARGET = 'dist/bin/browser/extensions/browserui@mozilla.org'
 
 FINAL_TARGET_FILES += [
   'arrow.svg',

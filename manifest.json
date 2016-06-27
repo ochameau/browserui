@@ -1,12 +1,12 @@
 {
-  "description": "Html Runner",
+  "description": "Browser UI",
   "manifest_version": 2,
-  "name": "HtmlRunner",
+  "name": "Browser UI",
   "version": "1.0",
 
   "applications": {
     "gecko": {
-      "id": "html-runner@mozilla.org"
+      "id": "browserui@mozilla.org"
     }
   },
 
