@@ -10,8 +10,10 @@ let extension;
 let listener;
 
 function startup(data) {
-  // Start the web-extension
-  extension = new Extension(data);
+  // Start the web-extension from the sub folder
+  let addonData = Object.create(data);
+  addonData.resourceURI = Services.io.newURI("webextension/", null, data.resourceURI);
+  extension = new Extension(addonData);
   extension.startup()
 
   let installPageURL = extension.baseURI.resolve("install-page.html");

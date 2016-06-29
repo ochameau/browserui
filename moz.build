@@ -1,15 +1,18 @@
 FINAL_TARGET = 'dist/bin/browser/extensions/browserui@mozilla.org'
 
 FINAL_TARGET_FILES += [
-  'arrow.svg',
   'bootstrap.js',
   'BrowserUIProtocolHandler.jsm',
   'chrome.manifest',
-  'controls.svg',
-  'install-page.css',
-  'install-page.html',
-  'install-page.js',
   'install.rdf',
-  'manifest.json',
   'MultiWindowKeyListener.jsm',
+]
+
+FINAL_TARGET_FILES.webextension += [
+  'webextension/arrow.svg',
+  'webextension/controls.svg',
+  'webextension/install-page.css',
+  'webextension/install-page.html',
+  'webextension/install-page.js',
+  'webextension/manifest.json',
 ]
