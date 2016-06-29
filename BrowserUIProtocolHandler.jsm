@@ -330,9 +330,34 @@ var BrowserUIHandlerFactory = {
   },
 
   reloadUI: function () {
+    // When reloading the UI, we first try to prune Service worker cache.
+    // We do not use reload(true) as it completely bypass service workers
+    // and prevent them from intercepting requests. So that it would just
+    // return outdated cache on the next regular load (next browser startup).
+    // Also, we could have only delete each cache instance instead of deleting
+    // entries of all caches, but that would mess up with service worker
+    // scripts which caches their Cache instances.
     let window = Services.wm.getMostRecentWindow(null);
     if (window) {
-      window.location.reload(true);
+      let { Promise } = window;
+      // Iter over all caches
+      window.caches.keys().then(keys => {
+        // Open each cache
+        return Promise.all(keys.map(key => window.caches.open(key)));
+      }).then(caches => {
+        return Promise.all(caches.map(cache => {
+          // Now iter over each entry for each cache
+          return cache.keys().then(keys => {
+            // Delete every single entry
+            return Promise.all(keys.map(key => cache.delete(key)));
+          });
+        }));
+      }).then(() => {
+        window.location.reload();
+      }, () => {
+        // Also reload if anything went wrong with service workers
+        window.location.reload();
+      });
     }
   }
 };
