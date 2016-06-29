@@ -45,7 +45,12 @@ function startup(data) {
 function install() {
 }
 
-function shutdown() {
+function shutdown(data, reason) {
+  if (reason == ADDON_UNINSTALL) {
+    // First reset to the browser.xul if the addon is removed
+    BrowserUIHandlerFactory.resetUI();
+  }
+
   // Unregister browserui:// on all active processes.
   Services.ppmm.loadProcessScript("data:,new " + function () {
     const { BrowserUIHandlerFactory } = Components.utils.import("resource://browserui/BrowserUIProtocolHandler.jsm", {});

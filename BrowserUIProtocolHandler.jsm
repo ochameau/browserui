@@ -24,40 +24,33 @@ let installPageURL;
 let addonId;
 
 // Watch for new browser UI toplevel document load
-[
-  'chrome-document-loaded',
-  'content-document-loaded',
-  'document-element-inserted'
-].forEach(function(name) {
-  Services.obs.addObserver(function(subject, topic, data) {
-    let chromeURL = Services.prefs.getCharPref('browser.chromeURL');
-    let window = subject.defaultView;
-    if (window instanceof Ci.nsIDOMChromeWindow &&
-        subject.location.href.startsWith(chromeURL)) {
-      if (topic === "document-element-inserted") {
-        if (chromeURL != "chrome://browser/content/browser.xul") {
-          // Add a fake gBrowser object, very minimal and non-working,
-          // just to have basic WebExtension feature working:
-          // loading install-page.html in an HTML iframe...
-          // Otherwise we get random exceptions which prevent exposing chrome.*
-          // APIs to it
-          window.gBrowser = {
-            addTabsProgressListener() {},
-            getTabForBrowser() {}
-          };
-          // Automatically resize the window, otherwise it defaults to 1x1 on Linux and Widthx0 on Windows
-          if (window.innerWidth < 10 || window.innerHeight < 10) {
-            subject.documentElement.setAttribute("width", window.screen.availWidth * 0.9);
-            subject.documentElement.setAttribute("height", window.screen.availHeight * 0.9);
-          }
+function observe(subject, topic, data) {
+  let chromeURL = Services.prefs.getCharPref('browser.chromeURL');
+  let window = subject.defaultView;
+  if (window instanceof Ci.nsIDOMChromeWindow &&
+      subject.location.href.startsWith(chromeURL)) {
+    if (topic === "document-element-inserted") {
+      if (chromeURL != "chrome://browser/content/browser.xul") {
+        // Add a fake gBrowser object, very minimal and non-working,
+        // just to have basic WebExtension feature working:
+        // loading install-page.html in an HTML iframe...
+        // Otherwise we get random exceptions which prevent exposing chrome.*
+        // APIs to it
+        window.gBrowser = {
+          addTabsProgressListener() {},
+          getTabForBrowser() {}
+        };
+        // Automatically resize the window, otherwise it defaults to 1x1 on Linux and Widthx0 on Windows
+        if (window.innerWidth < 10 || window.innerHeight < 10) {
+          subject.documentElement.setAttribute("width", window.screen.availWidth * 0.9);
+          subject.documentElement.setAttribute("height", window.screen.availHeight * 0.9);
         }
-      } else {
-        Services.obs.notifyObservers(null, 'new-chrome-loaded', null);
       }
+    } else {
+      Services.obs.notifyObservers(null, 'new-chrome-loaded', null);
     }
-  }, name, false);
-});
-
+  }
+}
 
 function setURIAsDefaultUI(browseruiURI) {
   let httpURI = browseruiURI.replace(/^browserui/, "http");
@@ -76,19 +69,25 @@ function setURIAsDefaultUI(browseruiURI) {
     // Detect redirect and uses the final URL
     let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(Ci.nsIXMLHttpRequest);
     xhr.open("HEAD", uri.spec, false);
-    xhr.send(null);
-    if (xhr.responseURL != uri.spec) {
-      uri = Services.io.newURI(xhr.responseURL, null, null);
-    }
+    xhr.onreadystatechange = function () {
+      if (xhr.readyState != 4) return;
+      if (xhr.responseURL != uri.spec) {
+        uri = Services.io.newURI(xhr.responseURL, null, null);
+      }
 
-    Preferences.set(uri);
-    Permissions.set(uri);
+      Preferences.set(uri);
+      Permissions.set(uri);
+
+      restart(uri);
+    };
+    xhr.send(null);
   } else {
     // Preferences.unset should reset back chromeURL pref
     let chromeURL = Services.prefs.getCharPref("browser.chromeURL");
     uri = Services.io.newURI(chromeURL, null, null);
+    restart(uri);
   }
-  restart(uri);
+
 }
 
 
@@ -295,6 +294,14 @@ var BrowserUIHandlerFactory = {
       // and also from mozbrowser iframes used in html browsers
       channel = BroadcastChannelFor(installPageURL, "confirm", {addonId, inIsolatedMozBrowser: true});
       channel.addEventListener("message", onMessage);
+
+      [
+        'chrome-document-loaded',
+        'content-document-loaded',
+        'document-element-inserted'
+      ].forEach(function(name) {
+        Services.obs.addObserver(observe, name, false);
+      });
     }
   },
 
@@ -304,6 +311,18 @@ var BrowserUIHandlerFactory = {
     }
     // Releasing the windows should collect them and the broadcastchannels with them.
     windows = [];
+
+    if (Services.appinfo.processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT) {
+      return;
+    }
+
+    [
+      'chrome-document-loaded',
+      'content-document-loaded',
+      'document-element-inserted'
+    ].forEach(function(name) {
+      Services.obs.removeObserver(observe, name, false);
+    });
   },
 
   resetUI: function () {

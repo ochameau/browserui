@@ -7,7 +7,7 @@
     em:id="browserui@mozilla.org"
     em:name="Browser UI"
     em:description="Run new interfaces for Firefox from HTML webpages"
-    em:version="0.1"
+    em:version="0.1.1"
     em:type="2"
   >
 
@@ -20,6 +20,8 @@
         <em:maxVersion>*</em:maxVersion>
       </Description>
     </em:targetApplication>
+
+    <em:multiprocessCompatible>true</em:multiprocessCompatible>
 
   </Description>
 
