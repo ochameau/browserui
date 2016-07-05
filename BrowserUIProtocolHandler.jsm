@@ -339,28 +339,55 @@ var BrowserUIHandlerFactory = {
     // scripts which caches their Cache instances.
     let window = Services.wm.getMostRecentWindow(null);
     if (window) {
-      let { Promise } = window;
-      // Iter over all caches
-      window.caches.keys().then(keys => {
-        // Open each cache
-        return Promise.all(keys.map(key => window.caches.open(key)));
-      }).then(caches => {
-        return Promise.all(caches.map(cache => {
-          // Now iter over each entry for each cache
-          return cache.keys().then(keys => {
-            // Delete every single entry
-            return Promise.all(keys.map(key => cache.delete(key)));
-          });
-        }));
+      clearCaches(window).catch(error => {
+        Cu.reportError("Error while clearing caches: " + error + " - " +
+                       error.stack);
       }).then(() => {
-        window.location.reload();
-      }, () => {
-        // Also reload if anything went wrong with service workers
         window.location.reload();
       });
     }
   }
 };
+
+// Clear all caches to force loading new resources
+function clearCaches(window) {
+  let cache = Cc["@mozilla.org/netwerk/cache-storage-service;1"]
+                .getService(Ci.nsICacheStorageService);
+  cache.clear();
+
+  let imageCache = Cc["@mozilla.org/image/tools;1"]
+                     .getService(Ci.imgITools)
+                     .getImgCacheForDocument(null);
+  // chrome
+  imageCache.clearCache(true);
+  // content
+  imageCache.clearCache(false);
+
+  return clearServiceWorkerCaches(window);
+}
+
+// Clear DOM `caches` API to reload service workers
+function clearServiceWorkerCaches(window) {
+  let { Promise } = window;
+  // Iter over all caches
+  let sb = Cu.Sandbox(window);
+  sb.window = window;
+  sb.Promise = window.Promise;
+  return Cu.evalInSandbox("new " + function () {
+    return window.caches.keys().then(keys => {
+      // Open each cache
+      return Promise.all(keys.map(key => window.caches.open(key)));
+    }).then(caches => {
+      return Promise.all(caches.map(cache => {
+        // Now iter over each entry for each cache
+        return cache.keys().then(keys => {
+          // Delete every single entry
+          return Promise.all(keys.map(key => cache.delete(key)));
+        });
+      }));
+    });
+  }, sb);
+}
 
 let windows = [];
 function BroadcastChannelFor(uri, name, originAttributes) {
