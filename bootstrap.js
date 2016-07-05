@@ -40,6 +40,10 @@ function startup(data) {
     callback: () => BrowserUIHandlerFactory.resetUI()
   });
   listenerReset.start();
+
+  const ServiceWorkers = Components.utils.import("resource://browserui/HttpServiceWorkers.jsm", {});
+  ServiceWorkers.startup();
+
 }
 
 function install() {
@@ -63,6 +67,9 @@ function shutdown(data, reason) {
   // Unregister the key shortcuts
   listenerReload.stop();
   listenerReset.stop();
+
+  const ServiceWorkers = Components.utils.import("resource://browserui/HttpServiceWorkers.jsm", {});
+  ServiceWorkers.shutdown();
 }
 
 function uninstall() {

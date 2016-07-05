@@ -14,6 +14,8 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
+var EXPORTED_SYMBOLS = [];
+
 const ProgressListener = {
   onStateChange: function(webProgress, request, stateFlags, status) {
     if (stateFlags & Ci.nsIWebProgressListener.STATE_START) {
@@ -52,13 +54,21 @@ function allowServiceWorkerForHttp(aXULWindow) {
         );
 }
 
-Services.wm.addListener({
+let listener = {
   onOpenWindow: allowServiceWorkerForHttp,
   onCloseWindow: function(aXULWindow) {},
   onWindowTitleChange: function(aXULWindow, aNewTitle) {}
-});
+};
 
-let currentWindow = Services.wm.getMostRecentWindow("navigator:browser");
-if (currentWindow) {
-  allowServiceWorkerForHttp(currentWindow);
+function startup() {
+  Services.wm.addListener(listener);
+
+  let currentWindow = Services.wm.getMostRecentWindow("navigator:browser");
+  if (currentWindow) {
+    allowServiceWorkerForHttp(currentWindow);
+  }
+}
+
+function shutdown() {
+  Services.wm.removeListener(listener);
 }
