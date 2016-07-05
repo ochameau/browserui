@@ -30,7 +30,8 @@ function observe(subject, topic, data) {
   if (window instanceof Ci.nsIDOMChromeWindow &&
       subject.location.href.startsWith(chromeURL)) {
     if (topic === "document-element-inserted") {
-      if (chromeURL != "chrome://browser/content/browser.xul") {
+      if (!chromeURL.includes("chrome://browser/content/")) {
+
         // Add a fake gBrowser object, very minimal and non-working,
         // just to have basic WebExtension feature working:
         // loading install-page.html in an HTML iframe...
@@ -40,6 +41,7 @@ function observe(subject, topic, data) {
           addTabsProgressListener() {},
           getTabForBrowser() {}
         };
+
         // Automatically resize the window, otherwise it defaults to 1x1 on Linux and Widthx0 on Windows
         if (window.innerWidth < 10 || window.innerHeight < 10) {
           subject.documentElement.setAttribute("width", window.screen.availWidth * 0.9);
