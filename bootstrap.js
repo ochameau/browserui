@@ -44,6 +44,8 @@ function startup(data) {
   const ServiceWorkers = Components.utils.import("resource://browserui/HttpServiceWorkers.jsm", {});
   ServiceWorkers.startup();
 
+  const CommandLine = Components.utils.import("resource://browserui/CommandLine.jsm", {});
+  CommandLine.startup();
 }
 
 function install() {
@@ -70,6 +72,9 @@ function shutdown(data, reason) {
 
   const ServiceWorkers = Components.utils.import("resource://browserui/HttpServiceWorkers.jsm", {});
   ServiceWorkers.shutdown();
+
+  const CommandLine = Components.utils.import("resource://browserui/CommandLine.jsm", {});
+  CommandLine.shutdown();
 }
 
 function uninstall() {

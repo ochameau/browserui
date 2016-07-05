@@ -4,6 +4,7 @@ FINAL_TARGET_FILES += [
   'bootstrap.js',
   'BrowserUIProtocolHandler.jsm',
   'chrome.manifest',
+  'CommandLine.jsm',
   'HttpServiceWorkers.jsm',
   'install.rdf',
   'MultiWindowKeyListener.jsm',
