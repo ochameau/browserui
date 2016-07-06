@@ -46,6 +46,9 @@ function startup(data) {
 
   const CommandLine = Components.utils.import("resource://browserui/CommandLine.jsm", {});
   CommandLine.startup();
+
+  const LightweightThemes = Components.utils.import("resource://browserui/LightweightThemes.jsm", {});
+  LightweightThemes.startup();
 }
 
 function install() {
@@ -75,6 +78,9 @@ function shutdown(data, reason) {
 
   const CommandLine = Components.utils.import("resource://browserui/CommandLine.jsm", {});
   CommandLine.shutdown();
+
+  const LightweightThemes = Components.utils.import("resource://browserui/LightweightThemes.jsm", {});
+  LightweightThemes.shutdown();
 }
 
 function uninstall() {
