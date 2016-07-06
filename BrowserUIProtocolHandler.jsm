@@ -372,23 +372,18 @@ function clearCaches(window) {
 function clearServiceWorkerCaches(window) {
   let { Promise } = window;
   // Iter over all caches
-  let sb = Cu.Sandbox(window);
-  sb.window = window;
-  sb.Promise = window.Promise;
-  return Cu.evalInSandbox("new " + function () {
-    return window.caches.keys().then(keys => {
-      // Open each cache
-      return Promise.all(keys.map(key => window.caches.open(key)));
-    }).then(caches => {
-      return Promise.all(caches.map(cache => {
-        // Now iter over each entry for each cache
-        return cache.keys().then(keys => {
-          // Delete every single entry
-          return Promise.all(keys.map(key => cache.delete(key)));
-        });
-      }));
-    });
-  }, sb);
+  return window.caches.keys().then(keys => {
+    // Open each cache
+    return Promise.all(keys.map(key => window.caches.open(key)));
+  }).then(caches => {
+    return Promise.all(caches.map(cache => {
+      // Now iter over each entry for each cache
+      return cache.keys().then(keys => {
+        // Delete every single entry
+        return Promise.all(keys.map(key => cache.delete(key)));
+      });
+    }));
+  });
 }
 
 let windows = [];
